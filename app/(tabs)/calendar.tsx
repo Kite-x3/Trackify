@@ -1,10 +1,18 @@
 import { ArrowLeftIcon, ArrowRightIcon } from "@/assets/icons/common-icons";
 import { CalendarIcon } from "@/assets/icons/tab-icons";
+import { HabitBox } from "@/components/HabitBox"; // импортируем HabitBox
 import { Module } from "@/components/Module";
 import { StyledText } from "@/components/StyledText";
 import { COLORS } from "@/constants/theme";
 import React, { useState } from "react";
-import { View, StyleSheet, TouchableOpacity, FlatList } from "react-native";
+import {
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { moderateScale } from "react-native-size-matters";
 
 const weekDays = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
 
@@ -20,6 +28,7 @@ const dummyCompletions = [
 
 export default function CalendarScreen() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
 
   const handlePrevMonth = () => {
     const prev = new Date(currentMonth);
@@ -40,7 +49,7 @@ export default function CalendarScreen() {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
 
-    const startWeekDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Пн=0
+    const startWeekDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
     const days: { date: Date; currentMonth: boolean }[] = [];
 
     for (let i = startWeekDay; i > 0; i--) {
@@ -76,38 +85,63 @@ export default function CalendarScreen() {
         },
       ]}
     >
-      <StyledText style={styles.dayNumber}>{item.date.getDate()}</StyledText>
-      {dummyHabits.map((habit) => {
-        const completion = dummyCompletions.find(
-          (c) =>
-            c.habitId === habit.id &&
-            c.date === item.date.toISOString().slice(0, 10)
-        );
-        if (!completion) return null;
-        return (
-          <View
-            key={habit.id}
-            style={[
-              styles.habitDot,
-              {
-                backgroundColor: completion.completed
-                  ? habit.color
-                  : COLORS.BUTTON_BACKGROUND,
-              },
-            ]}
-          >
-            {!completion.completed && <View style={styles.innerDot} />}
-          </View>
-        );
-      })}
+      {/* Число сверху */}
+      <View style={{ position: "absolute", top: moderateScale(2) }}>
+        <StyledText style={styles.dayNumber}>{item.date.getDate()}</StyledText>
+      </View>
+
+      {selectedHabitId &&
+        dummyHabits
+          .filter((h) => h.id === selectedHabitId)
+          .map((habit) => {
+            const completion = dummyCompletions.find(
+              (c) =>
+                c.habitId === habit.id &&
+                c.date === item.date.toISOString().slice(0, 10)
+            );
+            if (!completion) return null;
+
+            return (
+              <View
+                key={habit.id}
+                style={[styles.habitDot, { backgroundColor: habit.color }]}
+              >
+                {!completion.completed && (
+                  <View
+                    style={[
+                      styles.innerDot,
+                      { backgroundColor: COLORS.PRIMARY_BACKGROUND },
+                    ]}
+                  />
+                )}
+              </View>
+            );
+          })}
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.headerRow}>
-        <CalendarIcon size={24} color={COLORS.BACKGROUND_ICONS} />
+        <CalendarIcon
+          size={moderateScale(24)}
+          color={COLORS.BACKGROUND_ICONS}
+        />
         <StyledText style={styles.headerText}>Календарь</StyledText>
+      </View>
+
+      {/* Боксы привычек */}
+      <View style={styles.habitsRow}>
+        {dummyHabits.map((habit) => (
+          <TouchableOpacity
+            key={habit.id}
+            onPress={() =>
+              setSelectedHabitId(habit.id === selectedHabitId ? null : habit.id)
+            }
+          >
+            <HabitBox name={habit.name} color={habit.color} />
+          </TouchableOpacity>
+        ))}
       </View>
 
       <Module style={styles.module}>
@@ -137,14 +171,15 @@ export default function CalendarScreen() {
           keyExtractor={(item) => item.date.toDateString()}
           numColumns={7}
           columnWrapperStyle={{ justifyContent: "space-between" }}
-          scrollEnabled={false} // чтобы календарь не скроллился
+          scrollEnabled={false}
         />
       </Module>
 
-      {/* Легенда */}
+      {/* Унифицированная легенда */}
       <View style={styles.legendContainer}>
         <StyledText style={styles.legendTitle}>Легенда:</StyledText>
         <View style={styles.legendRow}>
+          {/* Выполнено */}
           <View style={styles.legendItem}>
             <View
               style={[
@@ -154,6 +189,8 @@ export default function CalendarScreen() {
             />
             <StyledText style={styles.legendText}>Выполнено</StyledText>
           </View>
+
+          {/* Не выполнено */}
           <View style={styles.legendItem}>
             <View
               style={[
@@ -161,76 +198,115 @@ export default function CalendarScreen() {
                 { backgroundColor: COLORS.BUTTON_BACKGROUND },
               ]}
             >
-              <View style={styles.innerDot} />
+              <View
+                style={[
+                  styles.innerDot,
+                  { backgroundColor: COLORS.PRIMARY_BACKGROUND },
+                ]}
+              />
             </View>
             <StyledText style={styles.legendText}>Не выполнено</StyledText>
           </View>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1 - 0.2,
-    justifyContent: "center",
-    padding: 16,
+    flex: 1,
+    padding: moderateScale(16),
   },
-  headerRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-  headerText: { fontSize: 16, marginLeft: 8, color: COLORS.PRIMARY_TEXT },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: moderateScale(8),
+  },
+  headerText: {
+    fontSize: moderateScale(16),
+    marginLeft: moderateScale(8),
+    color: COLORS.PRIMARY_TEXT,
+  },
+  habitsRow: {
+    flexDirection: "row",
+    marginBottom: moderateScale(12),
+    gap: moderateScale(8),
+  },
   module: { width: "100%" },
   monthNav: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: moderateScale(8),
   },
-  monthText: { fontSize: 16, marginHorizontal: 12, color: COLORS.PRIMARY_TEXT },
+  monthText: {
+    fontSize: moderateScale(16),
+    marginHorizontal: moderateScale(12),
+    color: COLORS.PRIMARY_TEXT,
+  },
   weekDaysRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginBottom: moderateScale(4),
   },
-  weekDay: { width: 40, textAlign: "center", color: COLORS.PRIMARY_TEXT },
+  weekDay: {
+    width: moderateScale(40),
+    textAlign: "center",
+    color: COLORS.PRIMARY_TEXT,
+  },
   dayBox: {
-    width: 40,
-    height: 40,
-    marginVertical: 2,
+    width: moderateScale(40),
+    height: moderateScale(40),
+    marginVertical: moderateScale(2),
     alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 10,
+    justifyContent: "flex-start", // цифры сверху
+    borderRadius: moderateScale(10),
+    paddingTop: moderateScale(2),
   },
-  dayNumber: { fontSize: 12, color: COLORS.PRIMARY_TEXT },
+  dayNumber: { fontSize: moderateScale(12), color: COLORS.PRIMARY_TEXT },
   habitDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginTop: 2,
+    width: moderateScale(10),
+    height: moderateScale(10),
+    borderRadius: moderateScale(5),
+    marginTop: moderateScale(18),
     alignItems: "center",
     justifyContent: "center",
   },
   innerDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: COLORS.CALENDAR_CURRENT,
-  },
-  legendContainer: { alignItems: "center", marginTop: 16 },
-  legendTitle: { fontSize: 14, color: COLORS.PRIMARY_TEXT, marginBottom: 4 },
-  legendRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "60%",
-  },
-  legendItem: { flexDirection: "row", alignItems: "center" },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 4,
+    width: moderateScale(4),
+    height: moderateScale(4),
+    borderRadius: moderateScale(2),
+    backgroundColor: COLORS.PRIMARY_BACKGROUND,
     alignItems: "center",
     justifyContent: "center",
   },
-  legendText: { fontSize: 12, color: COLORS.PRIMARY_TEXT },
+  legendContainer: {
+    marginTop: moderateScale(16),
+    alignItems: "flex-start",
+  },
+  legendTitle: {
+    fontSize: moderateScale(14),
+    color: COLORS.PRIMARY_TEXT,
+    marginBottom: moderateScale(4),
+  },
+  legendRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: moderateScale(12),
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: moderateScale(4),
+  },
+  legendDot: {
+    width: moderateScale(10),
+    height: moderateScale(10),
+    borderRadius: moderateScale(5),
+    marginRight: moderateScale(4),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  legendText: { fontSize: moderateScale(12), color: COLORS.PRIMARY_TEXT },
 });

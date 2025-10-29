@@ -4,6 +4,7 @@ import { Module } from "@/components/Module";
 import { StyledText } from "@/components/StyledText";
 import { COLORS } from "@/constants/theme";
 import { StyleSheet, View } from "react-native";
+import { moderateScale } from "react-native-size-matters";
 
 export default function StatsScreen() {
   let completionPercentage = 10;
@@ -24,14 +25,23 @@ export default function StatsScreen() {
     <View style={styles.container}>
       <Module style={styles.lvlBlock}>
         <View style={styles.trophybox}>
-          <TrophyIcon size={50} color={COLORS.PRIMARY_BACKGROUND}></TrophyIcon>
+          <TrophyIcon
+            size={moderateScale(50)}
+            color={COLORS.PRIMARY_BACKGROUND}
+          />
         </View>
         <View style={styles.levelInfo}>
-          <StyledText style={{ fontSize: 12 }}>Уровень {1}</StyledText>
-          <StyledText style={{ fontSize: 8 }}>{100} очков</StyledText>
+          <StyledText style={{ fontSize: moderateScale(12) }}>
+            Уровень {1}
+          </StyledText>
+          <StyledText style={{ fontSize: moderateScale(8) }}>
+            {100} очков
+          </StyledText>
           <View style={styles.progressInfo}>
-            <StyledText style={{ fontSize: 8 }}>до уровня {2}</StyledText>
-            <StyledText style={{ fontSize: 8 }}>
+            <StyledText style={{ fontSize: moderateScale(8) }}>
+              до уровня {2}
+            </StyledText>
+            <StyledText style={{ fontSize: moderateScale(8) }}>
               {10}/{200}
             </StyledText>
           </View>
@@ -47,6 +57,7 @@ export default function StatsScreen() {
           </View>
         </View>
       </Module>
+
       <View style={styles.stats}>
         <Module style={styles.statsBlock}>
           <StyledText style={styles.statsBlockText}>Открыто</StyledText>
@@ -57,8 +68,9 @@ export default function StatsScreen() {
           <StyledText style={styles.statsBlockText}>{10}</StyledText>
         </Module>
       </View>
-      <View>
-        <StyledText style={{ fontSize: 14 }}>Разблокированные</StyledText>
+
+      <View style={styles.achievementsSection}>
+        <StyledText style={styles.sectionTitle}>Разблокированные</StyledText>
         {unlockedAchievements.length > 0 ? (
           unlockedAchievements.map((achievement, index) => (
             <AchievementModule
@@ -74,8 +86,9 @@ export default function StatsScreen() {
           </StyledText>
         )}
       </View>
-      <View>
-        <StyledText style={{ fontSize: 14 }}>Заблокированные</StyledText>
+
+      <View style={styles.achievementsSection}>
+        <StyledText style={styles.sectionTitle}>Заблокированные</StyledText>
         {lockedAchievements.length > 0 ? (
           lockedAchievements.map((achievement, index) => (
             <AchievementModule
@@ -97,30 +110,31 @@ export default function StatsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 20,
-    marginHorizontal: 16,
+    gap: moderateScale(20),
+    marginHorizontal: moderateScale(16),
   },
   stats: {
-    display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
+    marginBottom: moderateScale(12),
   },
   statsBlock: {
-    width: 165,
+    width: moderateScale(165),
     alignItems: "center",
   },
   statsBlockText: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
   },
   lvlBlock: {
-    gap: 12,
+    gap: moderateScale(12),
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: moderateScale(12),
   },
   trophybox: {
     backgroundColor: COLORS.BUTTON_BACKGROUND,
-    borderRadius: 24,
-    padding: 6,
+    borderRadius: moderateScale(24),
+    padding: moderateScale(6),
   },
   levelInfo: {
     flex: 1,
@@ -128,32 +142,35 @@ const styles = StyleSheet.create({
   progressInfo: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginVertical: moderateScale(2),
   },
   progressBar: {
-    borderRadius: 10,
-    height: 5,
+    borderRadius: moderateScale(10),
+    height: moderateScale(5),
     position: "relative",
     backgroundColor: COLORS.INACTIVE_BUTTON_BACKGROUND,
+    marginTop: moderateScale(4),
   },
   progressFill: {
     position: "absolute",
     top: 0,
     left: 0,
     bottom: 0,
-    borderRadius: 10,
+    borderRadius: moderateScale(10),
     backgroundColor: COLORS.BUTTON_BACKGROUND,
     zIndex: -1,
   },
   achievementsSection: {
-    gap: 8,
+    gap: moderateScale(8),
+    marginBottom: moderateScale(12),
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: moderateScale(4),
   },
   emptyText: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     textAlign: "center",
     color: COLORS.INACTIVE_BUTTON_BACKGROUND,
     fontStyle: "italic",

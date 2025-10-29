@@ -1,16 +1,17 @@
 import React, { useState } from "react";
-import { View, FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
 
-import { Habit, WeekDay } from "../../types/habit";
-import { HabitModule } from "@/components/HabitModule";
-import { StyledText } from "@/components/StyledText";
-import { Module } from "@/components/Module";
-import { CalendarIcon } from "@/assets/icons/tab-icons";
+import { AddIcon } from "@/assets/icons/button-icons";
 import { TelescopeIcon } from "@/assets/icons/empty-tab-icons";
+import { CalendarIcon } from "@/assets/icons/tab-icons";
+import { HabitModule } from "@/components/HabitModule";
+import { Module } from "@/components/Module";
+import { StyledText } from "@/components/StyledText";
 import { COLORS } from "@/constants/theme";
 import { router } from "expo-router";
-import { AddIcon } from "@/assets/icons/button-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { moderateScale } from "react-native-size-matters";
+import { Habit, WeekDay } from "../../types/habit";
 
 let mockHabits: Habit[] = [
   {
@@ -201,18 +202,18 @@ export default function HabitsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
+    marginHorizontal: moderateScale(16),
   },
   listContent: {
-    gap: 12,
-    marginVertical: 20,
+    gap: moderateScale(12),
+    marginVertical: moderateScale(20),
   },
   commonInfoContainer: {
     flexDirection: "row",
-    gap: 12,
+    gap: moderateScale(12),
   },
   commonInfo: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
   },
   noHabitsContainer: {
     flex: 1,
@@ -220,28 +221,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   noHabitsTitle: {
-    marginTop: 26,
-    fontSize: 20,
-    marginBottom: 10,
+    marginTop: moderateScale(26),
+    fontSize: moderateScale(20),
+    marginBottom: moderateScale(10),
   },
   noHabitsText: {
-    fontSize: 12,
-    paddingHorizontal: 24,
+    fontSize: moderateScale(12),
+    paddingHorizontal: moderateScale(24),
     textAlign: "center",
   },
   addButton: {
-    marginTop: 50,
-    gap: 10,
+    marginTop: moderateScale(50),
+    gap: moderateScale(10),
     backgroundColor: COLORS.BUTTON_BACKGROUND,
-    borderRadius: 20,
+    borderRadius: moderateScale(20),
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(20),
   },
   addButtonText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     color: COLORS.PRIMARY_BACKGROUND,
   },
 });

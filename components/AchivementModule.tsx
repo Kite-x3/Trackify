@@ -3,6 +3,7 @@ import { Module } from "@/components/Module";
 import { StyledText } from "@/components/StyledText";
 import { COLORS } from "@/constants/theme";
 import { StyleSheet, View } from "react-native";
+import { moderateScale } from "react-native-size-matters";
 
 interface AchievementModuleProps {
   description: string;
@@ -19,7 +20,7 @@ export const AchievementModule: React.FC<AchievementModuleProps> = ({
     <Module
       style={[styles.achievementItem, !unlocked && styles.lockedAchievement]}
     >
-      <CalendarIcon />
+      <CalendarIcon size={moderateScale(24)} />
       <View style={styles.achievementContent}>
         <StyledText
           style={[
@@ -46,9 +47,9 @@ const styles = StyleSheet.create({
   achievementItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    padding: 12,
-    marginTop: 8,
+    gap: moderateScale(12),
+    padding: moderateScale(12),
+    marginTop: moderateScale(8),
   },
   lockedAchievement: {
     opacity: 0.6,
@@ -60,17 +61,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   achievementDescription: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     flex: 1,
-    marginRight: 8,
+    marginRight: moderateScale(8),
   },
   achievementReward: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     color: COLORS.PRIMARY_BACKGROUND,
     backgroundColor: COLORS.BUTTON_BACKGROUND,
-    borderRadius: 20,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    borderRadius: moderateScale(20),
+    paddingHorizontal: moderateScale(6),
+    paddingVertical: moderateScale(4),
   },
   lockedText: {
     color: COLORS.LOCKED_ACHIVEMENTS_TEXT,

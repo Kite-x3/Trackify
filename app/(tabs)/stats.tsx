@@ -1,9 +1,11 @@
-import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { StyledText } from "@/components/StyledText";
-import { Module } from "@/components/Module";
-import { COLORS } from "@/constants/theme";
 import { GraphIcon } from "@/assets/icons/tab-icons";
+import { HabitRow } from "@/components/HabitRow";
+import { Module } from "@/components/Module";
+import { StyledText } from "@/components/StyledText";
+import { COLORS } from "@/constants/theme";
+import React from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { moderateScale } from "react-native-size-matters";
 
 // Заглушечные данные
 const colorOptions = [
@@ -62,7 +64,7 @@ export default function StatsScreen() {
   if (!habits || habits.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <GraphIcon size={100} color={COLORS.BACKGROUND_ICONS} />
+        <GraphIcon size={moderateScale(100)} color={COLORS.BACKGROUND_ICONS} />
         <StyledText style={styles.noHabitTitle}>Нет данных</StyledText>
         <StyledText style={styles.noHabitText}>
           Создайте привычки и начните их выполнять
@@ -91,17 +93,7 @@ export default function StatsScreen() {
   ) => (
     <View>
       {habitArray.map((habit) => (
-        <View key={habit.id} style={styles.habitRow}>
-          <View style={styles.habitBox}>
-            <View style={[styles.colorDot, { backgroundColor: habit.color }]} />
-            <StyledText style={styles.habitName}>{habit.name}</StyledText>
-          </View>
-          <StyledText style={styles.habitValue}>
-            {valueType === "streak"
-              ? `${habit.streak} дн`
-              : `${habit.weeklyProgress}%`}
-          </StyledText>
-        </View>
+        <HabitRow key={habit.id} habit={habit} valueType={valueType} />
       ))}
     </View>
   );
@@ -109,9 +101,8 @@ export default function StatsScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ padding: 16 }}
+      contentContainerStyle={{ padding: moderateScale(16) }}
     >
-      {/* Верхние 4 модуля */}
       <View style={styles.topModules}>
         <Module style={styles.statModule}>
           <StyledText style={styles.moduleTitle}>Привычки</StyledText>
@@ -131,7 +122,6 @@ export default function StatsScreen() {
         </Module>
       </View>
 
-      {/* Прогресс за сегодня */}
       <Module style={styles.fullModule}>
         <StyledText style={styles.moduleTitle}>Прогресс за сегодня</StyledText>
         <View style={styles.progressInfo}>
@@ -140,7 +130,6 @@ export default function StatsScreen() {
             {totalCompletions}/{totalNeeded}
           </StyledText>
         </View>
-
         <View style={styles.progressBarContainer}>
           <View
             style={[
@@ -151,19 +140,16 @@ export default function StatsScreen() {
         </View>
       </Module>
 
-      {/* Привычки на сегодня */}
       <Module style={styles.fullModule}>
         <StyledText style={styles.moduleTitle}>Привычки на сегодня</StyledText>
         {renderHabitList(habits, "weeklyProgress")}
       </Module>
 
-      {/* Лучшие стрики */}
       <Module style={styles.fullModule}>
         <StyledText style={styles.moduleTitle}>Лучшие стрики</StyledText>
         {renderHabitList(bestStreaks, "streak")}
       </Module>
 
-      {/* Требуют внимания */}
       <Module style={styles.fullModule}>
         <StyledText style={styles.moduleTitle}>Требуют внимания</StyledText>
         {needAttention.length === 0 ? (
@@ -182,31 +168,40 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   noHabitTitle: {
-    marginTop: 26,
-    fontSize: 24,
-    marginBottom: 10,
+    marginTop: moderateScale(26),
+    fontSize: moderateScale(24),
+    marginBottom: moderateScale(10),
     color: COLORS.PRIMARY_TEXT,
   },
-  noHabitText: { fontSize: 12, color: COLORS.PRIMARY_TEXT },
-
+  noHabitText: { fontSize: moderateScale(12), color: COLORS.PRIMARY_TEXT },
   topModules: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: 8,
+    gap: moderateScale(8),
   },
-  statModule: { width: "48%", alignItems: "center", paddingVertical: 16 },
-  moduleTitle: { fontSize: 14, marginBottom: 8, color: COLORS.PRIMARY_TEXT },
-  moduleValue: { fontSize: 16, color: COLORS.PRIMARY_TEXT },
-  fullModule: { marginTop: 12, padding: 12 },
-
+  statModule: {
+    width: "48%",
+    alignItems: "center",
+    paddingVertical: moderateScale(16),
+  },
+  moduleTitle: {
+    fontSize: moderateScale(14),
+    marginBottom: moderateScale(8),
+    color: COLORS.PRIMARY_TEXT,
+  },
+  moduleValue: { fontSize: moderateScale(16), color: COLORS.PRIMARY_TEXT },
+  fullModule: { marginTop: moderateScale(12), padding: moderateScale(12) },
   progressInfo: { flexDirection: "row", justifyContent: "space-between" },
-
-  progressText: { fontSize: 12, color: COLORS.PRIMARY_TEXT, marginBottom: 8 },
+  progressText: {
+    fontSize: moderateScale(12),
+    color: COLORS.PRIMARY_TEXT,
+    marginBottom: moderateScale(8),
+  },
   progressBarContainer: {
     width: "100%",
-    height: 6,
-    borderRadius: 3,
+    height: moderateScale(6),
+    borderRadius: moderateScale(3),
     backgroundColor: COLORS.INACTIVE_BUTTON_BACKGROUND,
     overflow: "hidden",
   },
@@ -214,23 +209,5 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: COLORS.BUTTON_BACKGROUND,
   },
-
-  habitRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    justifyContent: "space-between",
-  },
-  habitBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.ADD_HABBIT_BUTTONS,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  colorDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
-  habitName: { color: COLORS.PRIMARY_BACKGROUND, fontSize: 12 },
-  habitValue: { color: COLORS.PRIMARY_TEXT, fontSize: 12 },
+  habitValue: { color: COLORS.PRIMARY_TEXT, fontSize: moderateScale(12) },
 });

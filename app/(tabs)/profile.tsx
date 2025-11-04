@@ -2,7 +2,7 @@ import { StyledText } from "@/components/StyledText";
 import React from "react";
 import { View, StyleSheet } from "react-native";
 
-export default function SettingsScreen() {
+export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <StyledText style={styles.title}>Настройки</StyledText>

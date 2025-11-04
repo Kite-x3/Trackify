@@ -18,15 +18,23 @@ export default function TabLayout() {
   return (
     <>
       <View style={styles.header}>
-        <View>
-          <StyledText style={styles.headerText}>Trackify</StyledText>
+        <StyledText style={styles.headerText}>Trackify</StyledText>
+
+        <View style={styles.rightSide}>
+          <View style={styles.levelContainer}>
+            <View style={styles.levelBadge}>
+              <TrophyIcon size={22} color={COLORS.BUTTON_BACKGROUND} />
+              <StyledText style={styles.levelText}>Ур. 12</StyledText>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => router.push("/add-habit")}
+          >
+            <AddIcon color={COLORS.PRIMARY_BACKGROUND} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push("/add-habit")}
-        >
-          <AddIcon color={COLORS.PRIMARY_BACKGROUND} />
-        </TouchableOpacity>
       </View>
 
       <Tabs
@@ -86,7 +94,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="settings"
+          name="profile"
           options={{
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
@@ -109,6 +117,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems:"center"
   },
   headerText: {
     fontSize: FONT.SIZE.HEADER,
@@ -146,4 +155,25 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.TABBAR_BACKGROUND_ITEM_SELECTED,
     zIndex: -1,
   },
+  levelContainer: {
+  justifyContent: "center",
+},
+
+levelBadge: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: COLORS.CALENDAR_ELSE,
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 20,
+  gap: 6,
+},
+levelText: {
+  color: COLORS.PRIMARY_TEXT,
+},
+rightSide:{
+  flexDirection: "row",
+  gap:10
+}
+
 });

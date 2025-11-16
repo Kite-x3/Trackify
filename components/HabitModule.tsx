@@ -1,11 +1,12 @@
 import { CheckIcon, MinusIcon } from "@/assets/icons/button-icons";
-import { ClockIcon, EditIcon, TrashIcon } from "@/assets/icons/common-icons";
+import { ClockIcon, EditIcon, FlameIcon, TrashIcon } from "@/assets/icons/common-icons";
 import { COLORS } from "@/constants/theme";
 import { Habit, WeekDay } from "@/types/habit";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 import { Module } from "./Module";
 import { StyledText } from "./StyledText";
+import { getStreakColor } from "@/utils/strakColor";
 
 interface HabitModuleProps {
   habit: Habit;
@@ -90,7 +91,10 @@ export const HabitModule: React.FC<HabitModuleProps> = ({
       <View style={styles.miniInfoBlocks}>
         <View style={styles.InfoBlock}>
           <StyledText style={styles.TextInfoBlok}>Стрик</StyledText>
-          <StyledText style={styles.TextInfoBlok}>{habit.streak}</StyledText>
+          <View style={styles.flameAndNumber}>
+            <StyledText style={styles.TextInfoBlok}>{habit.streak}</StyledText>
+            <FlameIcon color={getStreakColor(habit.streak)} />
+          </View>
         </View>
         <View style={styles.InfoBlock}>
           <StyledText style={styles.TextInfoBlok}>Всего</StyledText>
@@ -255,4 +259,7 @@ const styles = StyleSheet.create({
     color: COLORS.HINT_TEXT,
     textAlign: "left",
   },
+  flameAndNumber:{
+    flexDirection: "row"
+  }
 });

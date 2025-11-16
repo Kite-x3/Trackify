@@ -8,12 +8,20 @@ import {
 } from "@/assets/icons/tab-icons";
 import { StyledText } from "@/components/StyledText";
 import { COLORS, FONT } from "@/constants/theme";
+import { getMemeByLevel } from "@/utils/lvlMeme";
 import { Tabs, useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { moderateScale } from "react-native-size-matters";
+import { Image } from "react-native";
+import { useState } from "react";
+import { FullscreenImage } from "@/components/FullScreenImage";
 
 export default function TabLayout() {
   const router = useRouter();
+
+  const [showFull, setShowFull] = useState(false);
+  const level = 12;
+  const meme = getMemeByLevel(level);
 
   return (
     <>
@@ -23,7 +31,14 @@ export default function TabLayout() {
         <View style={styles.rightSide}>
           <View style={styles.levelContainer}>
             <View style={styles.levelBadge}>
-              <TrophyIcon size={22} color={COLORS.BUTTON_BACKGROUND} />
+              <TouchableOpacity onPress={() => setShowFull(true)}>
+                <Image
+                  source={meme}
+                  style={{ width: moderateScale(20), height: moderateScale(20), borderRadius: 20 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+              <FullscreenImage visible={showFull} source={meme} onClose={() => setShowFull(false)} />
               <StyledText style={styles.levelText}>Ур. 12</StyledText>
             </View>
           </View>

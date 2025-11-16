@@ -2,6 +2,7 @@ import { COLORS } from "@/constants/theme";
 import * as React from "react";
 import { IconProps } from "./IconProps";
 import Svg, { Path, G, ClipPath, Rect } from "react-native-svg";
+import { moderateScale } from "react-native-size-matters";
 
 export const TrashIcon: React.FC<IconProps> = ({
   size = 24,
@@ -102,6 +103,18 @@ export const ArrowRightIcon: React.FC<IconProps> = ({
       fillRule="evenodd"
       d="M12.88 13.915a1.429 1.429 0 0 0 2.085 1.952l4.576-4.891a1.429 1.429 0 0 0 0-1.952l-4.575-4.89a1.429 1.429 0 0 0-2.087 1.951L16.542 10l-3.663 3.915Z"
       clipRule="evenodd"
+    />
+  </Svg>
+);
+
+export const FlameIcon: React.FC<IconProps> = ({
+  size = moderateScale(14),
+  color = "#FF8C42",
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M8.47 8.4c-.8.65-1.44 1.39-1.99 2.24a8.983 8.983 0 0 0 3.66 13.91 1 1 0 0 0 1.32-1.24 6.98 6.98 0 0 1-.19-2.58 9 9 0 0 0 4.31 4.02c.22.1.48.11.72.04a9 9 0 0 0 3.65-14.86 1.24 1.24 0 0 0-.23-.18 1 1 0 0 0-1.4.41 5.78 5.78 0 0 1-1.4 1.78 8.71 8.71 0 0 0-4.27-9.09 1 1 0 0 0-1.49.8 7.02 7.02 0 0 1-2.47 4.94l-.23.18Z"
+      fill={color}
     />
   </Svg>
 );

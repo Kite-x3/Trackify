@@ -185,7 +185,7 @@ export default function HabitsScreen() {
         <Module>
           <View style={styles.commonInfoContainer}>
             <CalendarIcon />
-            <View>
+            <View style={{flex:1}}>
               <StyledText style={styles.commonInfo}>
                 На сегодня запланировано {habits.length} привычки
               </StyledText>
@@ -214,6 +214,7 @@ const styles = StyleSheet.create({
   },
   commonInfo: {
     fontSize: moderateScale(12),
+    flexWrap: "wrap"
   },
   noHabitsContainer: {
     flex: 1,

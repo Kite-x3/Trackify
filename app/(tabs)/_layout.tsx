@@ -10,17 +10,22 @@ import { StyledText } from "@/components/StyledText";
 import { COLORS, FONT } from "@/constants/theme";
 import { getMemeByLevel } from "@/utils/lvlMeme";
 import { Tabs, useRouter } from "expo-router";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { moderateScale } from "react-native-size-matters";
-import { Image } from "react-native";
-import { useState } from "react";
+
 import { FullscreenImage } from "@/components/FullScreenImage";
+import { useHabits } from "@/contexts/HabitsContext";
+import { useState } from "react";
 
 export default function TabLayout() {
   const router = useRouter();
+  const { habits } = useHabits();
 
   const [showFull, setShowFull] = useState(false);
-  const level = 12;
+  const totalPoints =
+    habits?.reduce((acc, h) => acc + h.allCompletions, 0) ?? 0;
+
+  const level = Math.floor(totalPoints / 100) + 1;
   const meme = getMemeByLevel(level);
 
   return (
@@ -34,12 +39,20 @@ export default function TabLayout() {
               <TouchableOpacity onPress={() => setShowFull(true)}>
                 <Image
                   source={meme}
-                  style={{ width: moderateScale(20), height: moderateScale(20), borderRadius: 20 }}
+                  style={{
+                    width: moderateScale(20),
+                    height: moderateScale(20),
+                    borderRadius: 20,
+                  }}
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-              <FullscreenImage visible={showFull} source={meme} onClose={() => setShowFull(false)} />
-              <StyledText style={styles.levelText}>Ур. 12</StyledText>
+              <FullscreenImage
+                visible={showFull}
+                source={meme}
+                onClose={() => setShowFull(false)}
+              />
+              <StyledText style={styles.levelText}>Ур. {level}</StyledText>
             </View>
           </View>
 
@@ -132,7 +145,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems:"center"
+    alignItems: "center",
   },
   headerText: {
     fontSize: FONT.SIZE.HEADER,
@@ -171,24 +184,23 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   levelContainer: {
-  justifyContent: "center",
-},
+    justifyContent: "center",
+  },
 
-levelBadge: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: COLORS.CALENDAR_ELSE,
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-  borderRadius: 20,
-  gap: 6,
-},
-levelText: {
-  color: COLORS.PRIMARY_TEXT,
-},
-rightSide:{
-  flexDirection: "row",
-  gap:10
-}
-
+  levelBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.CALENDAR_ELSE,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  levelText: {
+    color: COLORS.PRIMARY_TEXT,
+  },
+  rightSide: {
+    flexDirection: "row",
+    gap: 10,
+  },
 });

@@ -1,18 +1,26 @@
 import { CheckIcon, MinusIcon } from "@/assets/icons/button-icons";
-import { ClockIcon, EditIcon, FlameIcon, TrashIcon } from "@/assets/icons/common-icons";
+import {
+  ClockIcon,
+  EditIcon,
+  FlameIcon,
+  TrashIcon,
+} from "@/assets/icons/common-icons";
 import { COLORS } from "@/constants/theme";
 import { Habit, WeekDay } from "@/types/habit";
+import { getStreakColor } from "@/utils/strakColor";
+import { useMemo, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 import { Module } from "./Module";
 import { StyledText } from "./StyledText";
-import { getStreakColor } from "@/utils/strakColor";
 
 interface HabitModuleProps {
   habit: Habit;
-  onPress?: (habit: Habit) => void;
-  onDecrement: (habit: Habit) => void;
-  onComplete: (habit: Habit) => void;
+  onPress?: () => void;
+  onDecrement: () => void;
+  onComplete: () => void;
+  deleteHabit: () => void;
+  isPending: boolean;
 }
 
 export const HabitModule: React.FC<HabitModuleProps> = ({
@@ -20,11 +28,57 @@ export const HabitModule: React.FC<HabitModuleProps> = ({
   onPress,
   onDecrement,
   onComplete,
+  deleteHabit,
+  isPending,
 }) => {
+  const [localCompletions, setLocalCompletions] = useState(0);
+
+  const todayCompletions = useMemo(() => {
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0]; // "2025-12-05"
+
+    const todayCompletion = (habit.completions ?? []).find((c) => {
+      const date = new Date(c.date);
+      const dateStr = date.toISOString().split("T")[0];
+      return dateStr === todayStr;
+    });
+
+    return todayCompletion?.currentCount || localCompletions;
+  }, [habit.completions, localCompletions]);
+
+  const totalCompletions = useMemo(() => {
+    if (!habit.completions || habit.completions.length === 0) {
+      return habit.allCompletions || 0;
+    }
+
+    const sum = habit.completions.reduce((total, completion) => {
+      const count =
+        completion.currentCount !== undefined ? completion.currentCount : 0;
+      return total + count;
+    }, 0);
+
+    return sum;
+  }, [habit.completions, habit.allCompletions]);
+
+  const weekDayMap: { [key: number]: WeekDay } = {
+    1: "monday",
+    2: "tuesday",
+    3: "wednesday",
+    4: "thursday",
+    5: "friday",
+    6: "saturday",
+    0: "sunday",
+  };
+  const today = new Date();
+  const todayWeekDay = weekDayMap[today.getDay()];
+  const isScheduledToday = habit.completionDays.includes(todayWeekDay);
+
   const completionPercentage =
     habit.completionsNeed > 0
-      ? (habit.completionsToday / habit.completionsNeed) * 100
+      ? (todayCompletions / habit.completionsNeed) * 100
       : 0;
+
+  const isCompletedToday = todayCompletions >= habit.completionsNeed;
 
   const weekDays: { key: WeekDay; label: string }[] = [
     { key: "monday", label: "пн" },
@@ -35,6 +89,18 @@ export const HabitModule: React.FC<HabitModuleProps> = ({
     { key: "saturday", label: "сб" },
     { key: "sunday", label: "вс" },
   ];
+
+  const handleComplete = () => {
+    if (isPending || isCompletedToday || !isScheduledToday) return;
+    onComplete();
+    setLocalCompletions((prev) => Math.min(prev + 1, habit.completionsNeed));
+  };
+
+  const handleDecrement = () => {
+    if (todayCompletions === 0 || !isScheduledToday) return;
+    onDecrement();
+    setLocalCompletions((prev) => Math.max(prev - 1, 0));
+  };
 
   return (
     <Module style={styles.mainContainer}>
@@ -47,7 +113,14 @@ export const HabitModule: React.FC<HabitModuleProps> = ({
         </View>
         <View style={styles.interactionIcons}>
           <EditIcon color={COLORS.INTERACTION_ICONS} />
-          <TrashIcon color={COLORS.INTERACTION_ICONS} />
+          <TouchableOpacity
+            onPress={() => {
+              if (isPending) return;
+              deleteHabit();
+            }}
+          >
+            <TrashIcon color={COLORS.INTERACTION_ICONS} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -60,32 +133,48 @@ export const HabitModule: React.FC<HabitModuleProps> = ({
 
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
-          style={styles.decrementButton}
-          onPress={() => onDecrement(habit)}
-          disabled={habit.completionsToday === 0}
+          style={[
+            styles.decrementButton,
+            (todayCompletions === 0 || !isScheduledToday) && { opacity: 0.5 },
+          ]}
+          onPress={handleDecrement}
+          disabled={todayCompletions === 0 || !isScheduledToday || isPending}
         >
           <MinusIcon />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.progressButton}
-          onPress={() => onComplete(habit)}
-        >
-          <View
+
+        {isScheduledToday ? (
+          <TouchableOpacity
             style={[
-              styles.progressFill,
-              { width: `${Math.min(completionPercentage, 100)}%` },
+              styles.progressButton,
+              (isPending || isCompletedToday) && { opacity: 0.5 },
             ]}
-          />
-          <View style={styles.ProgressButtonInner}>
-            <CheckIcon
-              color={COLORS.PRIMARY_BACKGROUND}
-              size={moderateScale(16)}
+            onPress={handleComplete}
+            disabled={isPending || isCompletedToday}
+          >
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${Math.min(completionPercentage, 100)}%` },
+              ]}
             />
+            <View style={styles.ProgressButtonInner}>
+              <CheckIcon
+                color={COLORS.PRIMARY_BACKGROUND}
+                size={moderateScale(16)}
+              />
+              <StyledText style={styles.progressButtonText}>
+                {isCompletedToday ? "Выполнено" : "Отметить выполнение"}
+              </StyledText>
+            </View>
+          </TouchableOpacity>
+        ) : (
+          <View style={[styles.progressButton, { opacity: 0.5 }]}>
             <StyledText style={styles.progressButtonText}>
-              Отметить выполнение
+              Не планируется на сегодня
             </StyledText>
           </View>
-        </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.miniInfoBlocks}>
@@ -98,11 +187,15 @@ export const HabitModule: React.FC<HabitModuleProps> = ({
         </View>
         <View style={styles.InfoBlock}>
           <StyledText style={styles.TextInfoBlok}>Всего</StyledText>
-          <StyledText style={styles.TextInfoBlok}>{habit.streak}</StyledText>
+          <StyledText style={styles.TextInfoBlok}>
+            {totalCompletions}
+          </StyledText>
         </View>
         <View style={styles.InfoBlock}>
-          <StyledText style={styles.TextInfoBlok}>За неделю</StyledText>
-          <StyledText style={styles.TextInfoBlok}>{habit.streak}</StyledText>
+          <StyledText style={styles.TextInfoBlok}>Сегодня</StyledText>
+          <StyledText style={styles.TextInfoBlok}>
+            {todayCompletions}/{habit.completionsNeed}
+          </StyledText>
         </View>
       </View>
 
@@ -135,11 +228,11 @@ export const HabitModule: React.FC<HabitModuleProps> = ({
         ))}
       </View>
 
-      {habit.reminderTime && (
+      {habit.notificationsTime && habit.notificationsTime.length > 0 && (
         <View style={styles.reminderContainer}>
           <ClockIcon color={COLORS.HINT_TEXT} />
           <StyledText style={styles.reminderText}>
-            Напоминание: {habit.reminderTime}
+            Напоминание: {habit.notificationsTime.join(", ")}
           </StyledText>
         </View>
       )}
@@ -193,6 +286,7 @@ const styles = StyleSheet.create({
     position: "relative",
     backgroundColor: COLORS.INACTIVE_BUTTON_BACKGROUND,
     gap: moderateScale(8),
+    flex: 1,
   },
   progressFill: {
     position: "absolute",
@@ -259,7 +353,7 @@ const styles = StyleSheet.create({
     color: COLORS.HINT_TEXT,
     textAlign: "left",
   },
-  flameAndNumber:{
-    flexDirection: "row"
-  }
+  flameAndNumber: {
+    flexDirection: "row",
+  },
 });

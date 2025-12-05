@@ -1,20 +1,22 @@
-import React, { useState } from "react";
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import { AddIcon, MinusIcon } from "@/assets/icons/button-icons";
+import { BackIcon, TrashIcon } from "@/assets/icons/common-icons";
 import { StyledText } from "@/components/StyledText";
 import { COLORS } from "@/constants/theme";
-import { router } from "expo-router";
-import { AddIcon, MinusIcon } from "@/assets/icons/button-icons";
-import { WeekDay } from "@/types/habit";
-import { BackIcon, TrashIcon } from "@/assets/icons/common-icons";
+import { useHabits } from "@/contexts/HabitsContext";
+import { Habit, WeekDay } from "@/types/habit";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { router } from "expo-router";
+import React, { useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function AddHabitScreen() {
+  const { createHabit } = useHabits();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [completionsNeed, setCompletionsNeed] = useState(1);
@@ -77,6 +79,30 @@ export default function AddHabitScreen() {
 
   const removeReminder = () => {
     setReminderTime(null);
+  };
+
+  const handleCreate = async () => {
+    const tempHabit: Habit = {
+      id: crypto.randomUUID(),
+      name,
+      description,
+      color: selectedColor,
+      completionsNeed,
+      completionDays: selectedDays,
+      reminderTime: reminderTime?.toISOString(),
+      notificationsTime: reminderTime ? [formatTime(reminderTime)] : [],
+
+      completionsToday: 0,
+      streak: 0,
+      allCompletions: 0,
+      createdAt: new Date(),
+
+      type: "other",
+      completions: [],
+    };
+
+    await createHabit(tempHabit);
+    router.back();
   };
 
   return (
@@ -264,12 +290,7 @@ export default function AddHabitScreen() {
             <StyledText style={styles.cancelButtonText}>Отмена</StyledText>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={() => {
-              /* Логика создания */
-            }}
-          >
+          <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
             <StyledText style={styles.createButtonText}>Создать</StyledText>
           </TouchableOpacity>
         </View>

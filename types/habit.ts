@@ -1,3 +1,5 @@
+import { HabitCompletion } from "./completion";
+
 export interface Habit {
   id: string;
   name: string;
@@ -12,6 +14,7 @@ export interface Habit {
   completionsNeed: number;
   notificationsTime: string[];
   allCompletions: number;
+  completions: HabitCompletion[];
 }
 
 export type WeekDay = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';

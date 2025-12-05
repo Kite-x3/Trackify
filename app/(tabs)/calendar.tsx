@@ -1,9 +1,11 @@
 import { ArrowLeftIcon, ArrowRightIcon } from "@/assets/icons/common-icons";
 import { CalendarIcon } from "@/assets/icons/tab-icons";
-import { HabitBox } from "@/components/HabitBox"; // импортируем HabitBox
+import { HabitBox } from "@/components/HabitBox";
 import { Module } from "@/components/Module";
 import { StyledText } from "@/components/StyledText";
 import { COLORS } from "@/constants/theme";
+import { useHabits } from "@/contexts/HabitsContext";
+import { WeekDay } from "@/types/habit";
 import React, { useState } from "react";
 import {
   FlatList,
@@ -16,17 +18,8 @@ import { moderateScale } from "react-native-size-matters";
 
 const weekDays = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
 
-const dummyHabits = [
-  { id: "1", name: "Утренний спорт", color: "rgba(54, 37, 92, 0.8)" },
-  { id: "2", name: "Чтение", color: "rgba(202, 209, 131, 1)" },
-];
-
-const dummyCompletions = [
-  { habitId: "1", date: "2025-10-01", completed: true },
-  { habitId: "2", date: "2025-10-02", completed: false },
-];
-
 export default function CalendarScreen() {
+  const { habits } = useHabits();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
 
@@ -46,25 +39,36 @@ export default function CalendarScreen() {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
 
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+    const firstDay = new Date(Date.UTC(year, month, 1));
+    const lastDay = new Date(Date.UTC(year, month + 1, 0));
 
-    const startWeekDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+    const startWeekDay =
+      firstDay.getUTCDay() === 0 ? 6 : firstDay.getUTCDay() - 1;
     const days: { date: Date; currentMonth: boolean }[] = [];
 
     for (let i = startWeekDay; i > 0; i--) {
-      days.push({ date: new Date(year, month, 1 - i), currentMonth: false });
-    }
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      days.push({ date: new Date(year, month, i), currentMonth: true });
-    }
-    while (days.length % 7 !== 0) {
-      const lastDate = days[days.length - 1].date.getDate();
       days.push({
-        date: new Date(year, month, lastDate + 1),
+        date: new Date(Date.UTC(year, month, 1 - i)),
         currentMonth: false,
       });
     }
+
+    for (let i = 1; i <= lastDay.getUTCDate(); i++) {
+      days.push({
+        date: new Date(Date.UTC(year, month, i)),
+        currentMonth: true,
+      });
+    }
+
+    let nextDayCounter = 1;
+    while (days.length % 7 !== 0) {
+      days.push({
+        date: new Date(Date.UTC(year, month + 1, nextDayCounter)),
+        currentMonth: false,
+      });
+      nextDayCounter++;
+    }
+
     return days;
   };
 
@@ -74,39 +78,45 @@ export default function CalendarScreen() {
     item,
   }: {
     item: { date: Date; currentMonth: boolean };
-  }) => (
-    <View
-      style={[
-        styles.dayBox,
-        {
-          backgroundColor: item.currentMonth
-            ? COLORS.CALENDAR_CURRENT
-            : COLORS.CALENDAR_ELSE,
-        },
-      ]}
-    >
-      {/* Число сверху */}
-      <View style={{ position: "absolute", top: moderateScale(2) }}>
-        <StyledText style={styles.dayNumber}>{item.date.getDate()}</StyledText>
-      </View>
+  }) => {
+    const weekDayMap: { [key: number]: WeekDay } = {
+      1: "monday",
+      2: "tuesday",
+      3: "wednesday",
+      4: "thursday",
+      5: "friday",
+      6: "saturday",
+      0: "sunday",
+    };
 
-      {selectedHabitId &&
-        dummyHabits
+    const dayOfWeek = weekDayMap[item.date.getUTCDay()];
+
+    const habitDots = selectedHabitId
+      ? habits
           .filter((h) => h.id === selectedHabitId)
           .map((habit) => {
-            const completion = dummyCompletions.find(
-              (c) =>
-                c.habitId === habit.id &&
-                c.date === item.date.toISOString().slice(0, 10)
-            );
-            if (!completion) return null;
+            const needToComplete = habit.completionDays.includes(dayOfWeek);
+
+            if (!needToComplete) return null;
+
+            const isCompleted =
+              habit.completions?.some((c) => {
+                const completionDate = new Date(c.date);
+                const isSameDay =
+                  completionDate.getUTCFullYear() ===
+                    item.date.getUTCFullYear() &&
+                  completionDate.getUTCMonth() === item.date.getUTCMonth() &&
+                  completionDate.getUTCDate() === item.date.getUTCDate();
+
+                return isSameDay && c.completed === true;
+              }) || false;
 
             return (
               <View
                 key={habit.id}
                 style={[styles.habitDot, { backgroundColor: habit.color }]}
               >
-                {!completion.completed && (
+                {!isCompleted && (
                   <View
                     style={[
                       styles.innerDot,
@@ -116,9 +126,29 @@ export default function CalendarScreen() {
                 )}
               </View>
             );
-          })}
-    </View>
-  );
+          })
+      : null;
+
+    return (
+      <View
+        style={[
+          styles.dayBox,
+          {
+            backgroundColor: item.currentMonth
+              ? COLORS.CALENDAR_CURRENT
+              : COLORS.CALENDAR_ELSE,
+          },
+        ]}
+      >
+        <View style={{ position: "absolute", top: moderateScale(2) }}>
+          <StyledText style={styles.dayNumber}>
+            {item.date.getUTCDate()}
+          </StyledText>
+        </View>
+        {habitDots}
+      </View>
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -132,7 +162,7 @@ export default function CalendarScreen() {
 
       {/* Боксы привычек */}
       <View style={styles.habitsRow}>
-        {dummyHabits.map((habit) => (
+        {habits.map((habit) => (
           <TouchableOpacity
             key={habit.id}
             onPress={() =>
@@ -175,11 +205,10 @@ export default function CalendarScreen() {
         />
       </Module>
 
-      {/* Унифицированная легенда */}
+      {/* Легенда */}
       <View style={styles.legendContainer}>
         <StyledText style={styles.legendTitle}>Легенда:</StyledText>
         <View style={styles.legendRow}>
-          {/* Выполнено */}
           <View style={styles.legendItem}>
             <View
               style={[
@@ -189,8 +218,6 @@ export default function CalendarScreen() {
             />
             <StyledText style={styles.legendText}>Выполнено</StyledText>
           </View>
-
-          {/* Не выполнено */}
           <View style={styles.legendItem}>
             <View
               style={[
@@ -214,10 +241,7 @@ export default function CalendarScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: moderateScale(16),
-  },
+  container: { flex: 1, padding: moderateScale(16) },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -260,7 +284,7 @@ const styles = StyleSheet.create({
     height: moderateScale(40),
     marginVertical: moderateScale(2),
     alignItems: "center",
-    justifyContent: "flex-start", // цифры сверху
+    justifyContent: "flex-start",
     borderRadius: moderateScale(10),
     paddingTop: moderateScale(2),
   },
@@ -281,20 +305,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  legendContainer: {
-    marginTop: moderateScale(16),
-    alignItems: "flex-start",
-  },
+  legendContainer: { marginTop: moderateScale(16), alignItems: "flex-start" },
   legendTitle: {
     fontSize: moderateScale(14),
     color: COLORS.PRIMARY_TEXT,
     marginBottom: moderateScale(4),
   },
-  legendRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: moderateScale(12),
-  },
+  legendRow: { flexDirection: "row", flexWrap: "wrap", gap: moderateScale(12) },
   legendItem: {
     flexDirection: "row",
     alignItems: "center",

@@ -1,27 +1,111 @@
+import { AuthApi } from "@/api/auth";
 import { StyledText } from "@/components/StyledText";
 import { COLORS } from "@/constants/theme";
-import React, { useState } from "react";
+import { storage, useHabits } from "@/contexts/HabitsContext";
+import { useStats } from "@/contexts/StatsContext";
+import React, { useEffect, useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { moderateScale } from "react-native-size-matters";
 
 export default function ProfileScreen() {
+  const { resetHabits, syncWithServer } = useHabits();
+  const { resetStats, refreshStats } = useStats();
   const [isRegister, setIsRegister] = useState(false);
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
 
-  const handleSubmit = () => {
-    if (isRegister) {
-      console.log("Регистрация:", { login, password, email });
-    } else {
-      console.log("Вход:", { login, password });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const user = await AuthApi.currentUser();
+        setIsLoggedIn(!!user);
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+
+      if (isRegister) {
+        const registerResult = await AuthApi.register(login, email, password);
+
+        if (!registerResult) {
+          Alert.alert("Ошибка", "Ошибка при регистрации");
+          return;
+        }
+
+        const user = await AuthApi.login(login, password);
+
+        if (user) {
+          Alert.alert("Успех", "Вы успешно зарегистрировались и вошли!");
+          setIsLoggedIn(true);
+          await syncWithServer();
+          await refreshStats();
+        } else {
+          Alert.alert("Ошибка", "Ошибка при входе после регистрации");
+        }
+      } else {
+        const user = await AuthApi.login(login, password);
+
+        if (user) {
+          Alert.alert("Успех", "Вы успешно вошли!");
+          setIsLoggedIn(true);
+
+          await syncWithServer();
+          await refreshStats();
+        } else {
+          Alert.alert("Ошибка", "Неверный логин или пароль");
+        }
+      }
+    } catch (e: any) {
+      Alert.alert("Ошибка", e.message || "Что-то пошло не так");
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleLogout = async () => {
+    try {
+      await AuthApi.logout();
+      setIsLoggedIn(false);
+      setLogin("");
+      setPassword("");
+      setEmail("");
+      resetHabits();
+      resetStats();
+
+      storage.clearAll();
+    } catch {
+      Alert.alert("Ошибка", "Не удалось выйти");
+    }
+  };
+
+  if (isLoggedIn) {
+    return (
+      <View style={styles.container}>
+        <StyledText style={styles.title}>Вы вошли в аккаунт</StyledText>
+        <TouchableOpacity style={styles.button} onPress={handleLogout}>
+          <StyledText style={styles.buttonText}>Выйти</StyledText>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -29,7 +113,6 @@ export default function ProfileScreen() {
         {isRegister ? "Регистрация" : "Вход"}
       </StyledText>
 
-      {/* Логин */}
       <TextInput
         placeholder="Логин"
         placeholderTextColor={COLORS.HINT_TEXT}
@@ -38,7 +121,6 @@ export default function ProfileScreen() {
         onChangeText={setLogin}
       />
 
-      {/* Email (только при регистрации) */}
       {isRegister && (
         <TextInput
           placeholder="Email"
@@ -50,7 +132,6 @@ export default function ProfileScreen() {
         />
       )}
 
-      {/* Пароль */}
       <TextInput
         placeholder="Пароль"
         placeholderTextColor={COLORS.HINT_TEXT}
@@ -60,14 +141,20 @@ export default function ProfileScreen() {
         onChangeText={setPassword}
       />
 
-      {/* Кнопка Вход / Регистрация */}
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <StyledText style={styles.buttonText}>
-          {isRegister ? "Зарегистрироваться" : "Войти"}
-        </StyledText>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleSubmit}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <StyledText style={styles.buttonText}>
+            {isRegister ? "Зарегистрироваться" : "Войти"}
+          </StyledText>
+        )}
       </TouchableOpacity>
 
-      {/* Переключатель */}
       <TouchableOpacity onPress={() => setIsRegister(!isRegister)}>
         <StyledText style={styles.switchText}>
           {isRegister

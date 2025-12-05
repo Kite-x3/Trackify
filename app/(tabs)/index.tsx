@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { AddIcon } from "@/assets/icons/button-icons";
@@ -8,77 +8,15 @@ import { HabitModule } from "@/components/HabitModule";
 import { Module } from "@/components/Module";
 import { StyledText } from "@/components/StyledText";
 import { COLORS } from "@/constants/theme";
+import { useHabits } from "@/contexts/HabitsContext";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { moderateScale } from "react-native-size-matters";
 import { Habit, WeekDay } from "../../types/habit";
 
-let mockHabits: Habit[] = [
-  {
-    id: "1",
-    name: "Утренняя зарядка",
-    description: "15 минут упражнений",
-    completionsToday: 1,
-    color: "rgba(54, 37, 92, 0.8)",
-    streak: 7,
-    completionDays: [
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-      "sunday",
-    ],
-    type: "sport",
-    reminderTime: "07:00",
-    createdAt: new Date(),
-    completionsNeed: 1,
-    notificationsTime: ["07:00"],
-    allCompletions: 20,
-  },
-  {
-    id: "2",
-    name: "Чтение книги",
-    description: "30 минут чтения перед сном",
-    completionsToday: 0,
-    color: "rgba(201, 68, 114, 0.85)",
-    streak: 3,
-    completionDays: ["monday", "wednesday", "friday", "sunday"],
-    type: "reading",
-    reminderTime: "21:00",
-    createdAt: new Date(),
-    completionsNeed: 1,
-    notificationsTime: ["21:00"],
-    allCompletions: 12,
-  },
-  {
-    id: "3",
-    name: "Пить воду",
-    description: "8 стаканов воды в день",
-    completionsToday: 3,
-    color: "rgba(202, 209, 131, 1)",
-    streak: 15,
-    completionDays: [
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
-      "saturday",
-      "sunday",
-    ],
-    type: "health",
-    reminderTime: undefined,
-    createdAt: new Date(),
-    completionsNeed: 8,
-    notificationsTime: ["10:00", "14:00", "18:00"],
-    allCompletions: 120,
-  },
-];
-
 export default function HabitsScreen() {
-  const [habits, setHabits] = useState<Habit[]>(mockHabits);
+  const { habits, completeHabit, uncompleteHabit, deleteHabit, isPending } =
+    useHabits();
   const insets = useSafeAreaInsets();
 
   const today = new Date()
@@ -93,58 +31,15 @@ export default function HabitsScreen() {
     habit.completionDays.includes(today)
   ).length;
 
-  const handleDecrementHabit = (habit: Habit) => {
-    setHabits((prevHabits) =>
-      prevHabits.map((h) =>
-        h.id === habit.id && h.completionsToday > 0
-          ? {
-              ...h,
-              completionsToday: h.completionsToday - 1,
-              allCompletions: Math.max(0, h.allCompletions - 1),
-              weeklyCompletions: Math.max(0, h.completionsToday - 1),
-              streak:
-                h.completionsToday - 1 < h.completionsNeed
-                  ? Math.max(0, h.streak - 1)
-                  : h.streak,
-            }
-          : h
-      )
-    );
-  };
-
-  const handleCompleteHabit = (habit: Habit) => {
-    setHabits((prevHabits) =>
-      prevHabits.map((h) =>
-        h.id === habit.id
-          ? {
-              ...h,
-              completionsToday: Math.min(
-                h.completionsToday + 1,
-                h.completionsNeed
-              ),
-              allCompletions:
-                h.completionsToday - h.completionsNeed >= 0
-                  ? h.allCompletions
-                  : h.allCompletions + 1,
-              streak:
-                h.completionsToday - h.completionsNeed >= 0
-                  ? h.streak
-                  : h.streak + 1,
-            }
-          : h
-      )
-    );
-  };
-
-  const renderHabitItem = ({ item }: { item: Habit }) => {
-    return (
-      <HabitModule
-        habit={item}
-        onDecrement={handleDecrementHabit}
-        onComplete={handleCompleteHabit}
-      />
-    );
-  };
+  const renderHabitItem = ({ item }: { item: Habit }) => (
+    <HabitModule
+      habit={item}
+      onComplete={() => completeHabit(item.id)}
+      onDecrement={() => uncompleteHabit(item.id)}
+      deleteHabit={() => deleteHabit(item.id)}
+      isPending={isPending(item.id)}
+    />
+  );
 
   if (habits.length === 0) {
     return (
@@ -185,9 +80,9 @@ export default function HabitsScreen() {
         <Module>
           <View style={styles.commonInfoContainer}>
             <CalendarIcon />
-            <View style={{flex:1}}>
+            <View style={{ flex: 1 }}>
               <StyledText style={styles.commonInfo}>
-                На сегодня запланировано {habits.length} привычки
+                На сегодня запланировано {scheduledToday} привычки
               </StyledText>
               <StyledText style={styles.commonInfo}>
                 Выполнено {completedToday} из {scheduledToday} привычек сегодня
@@ -214,7 +109,7 @@ const styles = StyleSheet.create({
   },
   commonInfo: {
     fontSize: moderateScale(12),
-    flexWrap: "wrap"
+    flexWrap: "wrap",
   },
   noHabitsContainer: {
     flex: 1,
